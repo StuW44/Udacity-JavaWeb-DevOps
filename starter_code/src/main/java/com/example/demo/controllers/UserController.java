@@ -2,6 +2,7 @@ package com.example.demo.controllers;
 
 import java.util.Optional;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import com.example.demo.*;
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
+	static Logger log = Logger.getLogger(UserController.class);
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -34,12 +36,21 @@ public class UserController {
 
 	@GetMapping("/id/{id}")
 	public ResponseEntity<User> findById(@PathVariable Long id) {
-		return ResponseEntity.of(userRepository.findById(id));
+		Optional<User> user=userRepository.findById(id);
+		if(!user.isPresent())
+            log.error(String.format("Failure : user id does not exist '%d'.",id));
+         else
+			log.info(String.format("Success : user id found '%d'.",id));
+		return ResponseEntity.of(user);
 	}
 	
 	@GetMapping("/{username}")
 	public ResponseEntity<User> findByUserName(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
+		if(user == null)
+			log.error(String.format("Failure : user does not exist '%s'.",username));
+		else
+			log.info(String.format("Success : user '%s' found.",username));
 		return user == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(user);
 	}
 	
@@ -54,11 +65,14 @@ public class UserController {
 				!createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())){
 			//System.out.println("Error - Either length is less than 7 or pass and conf pass do not match. Unable to create ",
 			//		createUserRequest.getUsername());
+			log.error(String.format("Exception : user '%s' is either too short or the passwords don't match.",user.getUsername()));
 			return ResponseEntity.badRequest().build();
 		}
 
 		user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
 		userRepository.save(user);
+
+		log.info(String.format("Success : user '%s' created.",user.getUsername()));
 		return ResponseEntity.ok(user);
 	}
 	
