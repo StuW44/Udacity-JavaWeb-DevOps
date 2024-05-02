@@ -24,16 +24,18 @@ public class ItemController {
 	
 	@GetMapping
 	public ResponseEntity<List<Item>> getItems() {
-		return ResponseEntity.ok(itemRepository.findAll());
+		List<Item> items = itemRepository.findAll();
+		log.info(String.format("Success :  %d items found.",items.size()));
+		return ResponseEntity.ok(items);
 	}
 	
 	@GetMapping("/{id}")
 	public ResponseEntity<Item> getItemById(@PathVariable Long id) {
 		Optional<Item> item= itemRepository.findById(id);
 		if(!item.isPresent())
-			log.error(String.format("Failure : item id '%d' does not exist.",id));
+			log.error(String.format("Failure : item id %d does not exist.",id));
 		else
-			log.info(String.format("Success : item id '%d' found.",id));
+			log.info(String.format("Success : item id %d found.",id));
 		return ResponseEntity.of(item);
 	}
 	
@@ -42,11 +44,11 @@ public class ItemController {
 		List<Item> items = itemRepository.findByName(name);
 
 		if( items == null || items.isEmpty()){
-			log.error(String.format("Failure : item does not exist '%s'.",name));
+			log.error(String.format("Failure : item does not exist for name %s.",name));
 			return  ResponseEntity.notFound().build();
 		}
 		else {
-			log.info(String.format("Success : found '%d' items for '%s'.",items.size(),name));
+			log.info(String.format("Success : found %d items for name %s.",items.size(),name));
 			return ResponseEntity.ok(items);
 		}
 	}
